@@ -11,9 +11,9 @@ v_mp = 44.1
 i_mp = 9.08
 v_oc = 53.4
 i_sc = 9.60
-alpha_sc = 0.0005 * i_mp
-beta_voc = -0.0029 * v_mp
-gamma_pdc = -0.0037
+alpha_sc = 0.0005 * i_sc
+beta_voc = -0.0029 * v_oc
+gamma_pdc = -0.37
 cells_in_series = 6*27
 temp_ref = 25
 
