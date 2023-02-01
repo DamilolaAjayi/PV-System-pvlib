@@ -40,15 +40,16 @@ modelchain.run_model(tmy)
 
 # modelchain.results.ac.plot(figsize=(16,9)) # ac output of the PV system
 
-modelchain.results.ac.resample("M").sum().plot(figsize=(16,9))
-plt.show()
+# modelchain.results.ac.resample("M").sum().plot(figsize=(16,9))
+# plt.show()
 
 # print(inverter)
 
-# poa_data_2015 = pd.read_csv('poa_data.csv', index_col=0)
-# poa_data_2015.index = pd.to_datetime(poa_data_2015.index)
+poa_data_2015 = pd.read_csv('poa_data_2015_io.csv', index_col=0)
+poa_data_2015.index = pd.to_datetime(poa_data_2015.index)
 
-# modelchain.run_model_from_poa(poa_data_2015)
+modelchain.run_model_from_poa(poa_data_2015)
 
+modelchain.results.ac.plot(figsize=(16,9))
 # modelchain.results.ac.resample("M").sum().plot(figsize=(16,9))
-# plt.show()
+plt.show()
