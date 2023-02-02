@@ -1,6 +1,7 @@
 import pvlib
 import pandas as pd
 from pvlib.location import Location
+from pvlib.pvsystem import PVSystem
 import matplotlib.pyplot as plt
 
 nittany_place = Location(latitude=40.2016504, longitude= -76.7354743, altitude=117.8531643, tz= 'America/New_York', name='Nittany Place')
@@ -44,22 +45,71 @@ effective_irradiance = poa_data['poa_direct'] * iam + poa_data['poa_diffuse']
 temp_cell = pvlib.temperature.faiman(poa_data['poa_global'], poa_data['temp_air'],
                                         poa_data['wind_speed'])
 
+
+
+I_L_ref, I_o_ref, R_s, R_sh_ref, a_ref, Adjust =  pvlib.ivtools.sdm.fit_cec_sam(
+        celltype= celltype,
+        v_mp = v_mp,
+        i_mp = i_mp,
+        v_oc = v_oc,
+        i_sc = i_sc,
+        alpha_sc = alpha_sc,
+        beta_voc = beta_voc,
+        gamma_pmp = gamma_pdc,
+        cells_in_series =  cells_in_series,
+        temp_ref = temp_ref)
+
+cec_params = pvlib.pvsystem.calcparams_cec(effective_irradiance, 
+                                temp_cell,
+                                alpha_sc,
+                                a_ref,
+                                I_L_ref,
+                                I_o_ref,
+                                R_sh_ref,
+                                R_s,
+                                Adjust)
+
+mpp = pvlib.pvsystem.max_power_point(*cec_params, method='newton')
+
+# print(mpp)
+
+# mpp.plot(figsize=(9,4))
+# plt.show()
+
+system = PVSystem(modules_per_string=5, strings_per_inverter=1)
+
+dc_scaled = system.scale_voltage_current_power(mpp)
+# dc_scaled.plot(figsize=(9,4))
+# plt.show()
 # calculate dc output of module
-result_dc = pvlib.pvsystem.pvwatts_dc(effective_irradiance,
-                                        temp_cell,
-                                        pdc0,
-                                        gamma_pdc,
-                                        temp_ref)
+# result_dc = pvlib.pvsystem.pvwatts_dc(effective_irradiance,
+#                                         temp_cell,
+#                                         pdc0,
+#                                         gamma_pdc,
+#                                         temp_ref)
 
-result_dc.plot(figsize=(16,9))
-plt.title('DC Output Power')
-plt.show()
+# result_dc.plot(figsize=(16,9))
+# plt.title('DC Output Power')
+# plt.show()
 
-results_ac = pvlib.inverter.pvwatts(pdc = result_dc,
-                                    pdc0=500,
+results_ac = pvlib.inverter.pvwatts(pdc = dc_scaled.p_mp,
+                                    pdc0=2000,
                                     eta_inv_nom=0.961,
                                     eta_inv_ref=0.9637)
 
-results_ac.plot(figsize=(16,9))
+# results_ac.plot(figsize=(9,4))
+# plt.title('AC Output Power')
+# plt.show()
+cec_inverters = pvlib.pvsystem.retrieve_sam('CECInverter')
+
+inverter = cec_inverters['ABB__PVI_3_0_OUTD_S_US__208V_']
+
+ac_results = pvlib.inverter.sandia(
+                            v_dc = dc_scaled.v_mp,
+                            p_dc = dc_scaled.p_mp,
+                            inverter = inverter)
+
+
+ac_results.plot(figsize=(9,4))
 plt.title('AC Output Power')
 plt.show()
